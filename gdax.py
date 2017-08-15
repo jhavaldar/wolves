@@ -96,3 +96,14 @@ def funds_sell(funds, product_id):
   }
   r = requests.post(api_url + 'orders', json=order, auth=auth)
   return r.json()
+
+# Get a list of all currency pairs for trading.
+def get_products(product_id):
+  r = requests.get(api_url + 'products')
+  return r.json()
+
+
+# Get a list of the best bid and ask orders for a certain product
+def get_book(product_id):
+  r = requests.get(api_url + 'products/' + product_id + "/book")
+  return r.json()
