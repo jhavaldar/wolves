@@ -27,102 +27,82 @@
 # 6 call/second
 
 
-import requests
-import os
-import urllib
-import urllib2
-import json
-import time
-import hmac,hashlib
-
-req={}
+import requests, os, time, hmac, hashlib, json, base64
+import urllib, urllib2
+from requests.auth import AuthBase
 
 # Delete this late
 api_file = open("api_polo.txt", "r")
 API = api_file.readlines()
 
 # API KEYS
-APIKey = API[0].rstrip()
-Secret = API[1]
+API_KEY = API[0].rstrip()
+API_SECRET = API[1]
 
+# Generate a nonce
+def nonce():
+  return str(time.time()*1000)
 
-#ACCOUNT
+# Create custom authentication for Exchange
+class PoloniexExchangeAuth(AuthBase):
+    def __init__(self, api_key, secret_key):
+        self.api_key = api_key
+        self.secret_key = secret_key
 
+    def __call__(self, request):
+      data = request.body
+      h = hmac.new(API_SECRET, data, hashlib.sha512)
+      signature = h.hexdigest()
+
+      request.headers.update({
+        "Sign": signature,
+        "Key": self.api_key
+      })
+      return request
+
+# Returns an authenticated object for the exchange.
+def get_auth(API_KEY, API_SECRET):
+  auth = PoloniexExchangeAuth(API_KEY, API_SECRET)
+  return auth
+
+auth = get_auth(API_KEY, API_SECRET)
+
+endpoint_url = 'https://poloniex.com/tradingApi'
 
 #QUOTE - specific current pair
 #{"asks":[[0.00007600,1164],[0.00007620,1300], ... ], "bids":[[0.00006901,200],[0.00006900,408], ... ], "isFrozen": 0, "seq": 18849}
 def polo_quote(currencyPair):
-  ret = requests.get('https://poloniex.com/public?command=returnOrderBook&currencyPair='+currencyPair+'&depth=10')
-  return ret.json()
+  r = requests.get('https://poloniex.com/public?command=returnOrderBook&currencyPair='+currencyPair+'&depth=10')
+  return r.json()
 
-
-#BALANCE
+# Returns the balance in each currency, in JSON format
 #{u'available': u'0.00000000', u'onOrders': u'0.00000000', u'btcValue': u'0.00000000'}
 def polo_balance(coin):
-  req={}
-  req['command'] = 'returnCompleteBalances'
-  req['nonce'] = int(time.time()*1000)
-  req['account'] = 'all'
-  post_data = urllib.urlencode(req)
-  sign = hmac.new(Secret, post_data, hashlib.sha512).hexdigest()
-  headers = {
-      'Sign': sign,
-      'Key': APIKey
+  order = {
+    'command': 'returnCompleteBalances',
+    'nonce': nonce(),
+    'account': 'all'
   }
-  ret = urllib2.urlopen(urllib2.Request('https://poloniex.com/tradingApi', post_data, headers))
-  jsonRet = json.loads(ret.read())
-  return jsonRet[coin]
+  r = requests.post(endpoint_url, data=order, auth=auth).json()
+  if 'error' in r:
+    raise Exception("Request Error: " + r['error'])
+  if coin not in r:
+    raise Exception("No coin with that name.")
+  return r[coin]
 
-
-
-#BUY
+# Buy/sell, with product_id being the currency pair. Returns response in JSON format.
 # {"orderNumber":31226040,"resultingTrades":[{"amount":"338.8732","date":"2014-10-18 23:03:21","rate":"0.00000173","total":"0.00058625","tradeID":"16164","type":"buy"}]}
-def polo_size_buy(currencyPair, rate, amount):
-  req={}
-  req['command'] = 'buy'
-  req['nonce'] = int(time.time()*1000)
-  req['currencyPair'] = currencyPair
-  req['rate'] = rate
-  req['amount'] = amount
-  post_data = urllib.urlencode(req)
-  sign = hmac.new(Secret, post_data, hashlib.sha512).hexdigest()
-  headers = {
-      'Sign': sign,
-      'Key': APIKey
+def order(currencyPair, rate, amount, side):
+  if side not in ['buy', 'sell']:
+    raise Exception("Invalid side for transaction.")
+  order = {
+    'command': side,
+    'nonce': nonce(),
+    'currencyPair': currencyPair,
+    'rate': rate,
+    'amount': amount
   }
-  ret = urllib2.urlopen(urllib2.Request('https://poloniex.com/tradingApi', post_data, headers))
-  jsonRet = json.loads(ret.read())
-  return jsonRet
-
-
-
-#SELL
-# {"orderNumber":31226040,"resultingTrades":[{"amount":"338.8732","date":"2014-10-18 23:03:21","rate":"0.00000173","total":"0.00058625","tradeID":"16164","type":"sell"}]}
-def polo_size_sell(currencyPair, rate, amount):
-  req={}
-  req['command'] = 'sell'
-  req['nonce'] = int(time.time()*1000)
-  req['currencyPair'] = currencyPair
-  req['rate'] = rate
-  req['amount'] = amount
-  post_data = urllib.urlencode(req)
-  sign = hmac.new(Secret, post_data, hashlib.sha512).hexdigest()
-  headers = {
-      'Sign': sign,
-      'Key': APIKey
-  }
-  ret = urllib2.urlopen(urllib2.Request('https://poloniex.com/tradingApi', post_data, headers))
-  jsonRet = json.loads(ret.read())
-  return jsonRet
-
-
-
-# BTC_SC
-
-# returnBalances
-# returnCompleteBalances
-
-# buy
-# sell
-
-
+  r = requests.post(endpoint_url, data=order, auth=auth)
+  if 'error' in r:
+    raise Exception("Request Error: " + r['error'])
+  return r

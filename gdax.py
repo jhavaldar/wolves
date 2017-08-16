@@ -40,7 +40,7 @@ def get_auth(API_KEY, API_SECRET, API_PASS):
   auth = CoinbaseExchangeAuth(API_KEY, API_SECRET, API_PASS)
   return auth
 
-auth = None
+#auth = None
 
 # Return accounts information in JSON format
 def get_accounts():
@@ -50,12 +50,11 @@ def get_accounts():
 
 # Return order ID in JSON format. You can specify buying by size or by quote currency.
 def size_buy(size, product_id):
-  if size:
   order = {
-      'size': size,
-      'side': 'buy',
-      "type": 'market'
-      'product_id': product_id,
+    'size': size,
+    'side': 'buy',
+    "type": 'market',
+    'product_id': product_id
   }
   r = requests.post(api_url + 'orders', json=order, auth=auth)
   return r.json()
@@ -63,11 +62,10 @@ def size_buy(size, product_id):
 
 # Return order ID in JSON format.
 def funds_buy(funds, product_id):
-  if size:
   order = {
       'funds': funds,
       'side': 'buy',
-      "type": 'market'
+      "type": 'market',
       'product_id': product_id
   }
   r = requests.post(api_url + 'orders', json=order, auth=auth)
@@ -75,19 +73,17 @@ def funds_buy(funds, product_id):
 
 # Return order ID in JSON format. You can specify buying by size or by quote currency.
 def size_sell(size, product_id):
-  if size:
   order = {
-      'size': size,
-      'side': 'sell',
-      "type": "market",
-      'product_id': product_id
+    'size': size,
+    'side': 'sell',
+    "type": "market",
+    'product_id': product_id
   }
   r = requests.post(api_url + 'orders', json=order, auth=auth)
   return r.json()
 
 # Return order ID in JSON format. You can specify buying by size or by quote currency.
 def funds_sell(funds, product_id):
-  if size:
   order = {
       'funds': funds,
       'side': 'sell',
@@ -98,12 +94,14 @@ def funds_sell(funds, product_id):
   return r.json()
 
 # Get a list of all currency pairs for trading.
-def get_products(product_id):
-  r = requests.get(api_url + 'products', auth=auth)
+def get_products():
+  r = requests.get(api_url + 'products')
   return r.json()
 
 
 # Get a list of the best bid and ask orders for a certain product
 def get_book(product_id):
-  r = requests.get(api_url + 'products/' + product_id + "/book", auth=auth)
+  r = requests.get(api_url + 'products/' + product_id + "/book")
   return r.json()
+
+print repr(get_products())

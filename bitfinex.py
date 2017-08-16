@@ -1,3 +1,6 @@
+# Rate Limits: <60 requests per minute
+
+
 import requests
 import json, hmac, hashlib, time, requests, base64
 from requests.auth import AuthBase
