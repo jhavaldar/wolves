@@ -99,11 +99,11 @@ def funds_sell(funds, product_id):
 
 # Get a list of all currency pairs for trading.
 def get_products(product_id):
-  r = requests.get(api_url + 'products')
+  r = requests.get(api_url + 'products', auth=auth)
   return r.json()
 
 
 # Get a list of the best bid and ask orders for a certain product
 def get_book(product_id):
-  r = requests.get(api_url + 'products/' + product_id + "/book")
+  r = requests.get(api_url + 'products/' + product_id + "/book", auth=auth)
   return r.json()

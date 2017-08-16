@@ -2,3 +2,4 @@ env.sh
 *.pyc
 *.txt
 api_polo.txt
+api_bitfinex.txt
