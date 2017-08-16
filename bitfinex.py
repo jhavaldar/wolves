@@ -78,7 +78,10 @@ def get_rate(symbol, side):
   amounts = [float(order['amount']) for order in get_orders(symbol)[side]]
   zipped = zip(prices, amounts)
   rates = [d[0]/d[1] for d in zipped]
-  return np.mean(rates)
+  if side=='asks':
+    return np.amax(a)
+  if side=='bids':
+    return np.amin(a)
 
 # Get the API Key and the API Secret
 def get_auth():
