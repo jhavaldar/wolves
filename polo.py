@@ -26,32 +26,20 @@
 # Rate Limits
 # 6 call/second
 
-
-import requests, os, time, hmac, hashlib, json, base64
-import urllib, urllib2
+import requests, os, hmac, hashlib, json, base64
 from requests.auth import AuthBase
+import util
+import numpy as np
 
-# Delete this late
-api_file = open("api_polo.txt", "r")
-API = api_file.readlines()
-
-# API KEYS
-API_KEY = API[0].rstrip()
-API_SECRET = API[1]
-
-# Generate a nonce
-def nonce():
-  return str(time.time()*1000)
-
-# Create custom authentication for Exchange
+# Create custom authentication for exchange
 class PoloniexExchangeAuth(AuthBase):
     def __init__(self, api_key, secret_key):
         self.api_key = api_key
         self.secret_key = secret_key
 
     def __call__(self, request):
-      data = request.body
-      h = hmac.new(API_SECRET, data, hashlib.sha512)
+      data = json.dumps(request)
+      h = hmac.new(self.secret_key, data, hashlib.sha512)
       signature = h.hexdigest()
 
       request.headers.update({
@@ -60,27 +48,44 @@ class PoloniexExchangeAuth(AuthBase):
       })
       return request
 
-# Returns an authenticated object for the exchange.
-def get_auth(API_KEY, API_SECRET):
-  auth = PoloniexExchangeAuth(API_KEY, API_SECRET)
-  return auth
+api_file = "api_polo.txt"
 
-auth = get_auth(API_KEY, API_SECRET)
+# Get the API Key and the API Secret
+def get_auth(api_file):
+  with open(api_file, 'r') as file:
+    arr = file.read().split("\n")
+    API_KEY = arr[0]
+    API_SECRET = arr[1]
+    auth = PoloniexExchangeAuth(API_KEY, API_SECRET)
+    return auth
+
+auth = get_auth(api_file)
 
 endpoint_url = 'https://poloniex.com/tradingApi'
 
-#QUOTE - specific current pair
-#{"asks":[[0.00007600,1164],[0.00007620,1300], ... ], "bids":[[0.00006901,200],[0.00006900,408], ... ], "isFrozen": 0, "seq": 18849}
-def polo_quote(currencyPair):
-  r = requests.get('https://poloniex.com/public?command=returnOrderBook&currencyPair='+currencyPair+'&depth=10')
-  return r.json()
+# Get bidding/asking price, over the last 10 bids/asks
+# Highest ask and lowest bid; worst case scenario.
+# side = 'bids' or 'asks'
+def get_rate(currencyPair, side):
+  if side not in ['asks', 'bids']:
+    raise Exception("Invalid side for transaction.")
+  orders = requests.get('https://poloniex.com/public?command=returnOrderBook&currencyPair='+currencyPair+'&depth=10').json()
+  print orders
+  prices = [float(order[0]) for order in orders[side]]
+  amounts = [float(order[1]) for order in orders[side]]
+  zipped = zip(prices, amounts)
+  rates = [d[1]/d[0] for d in zipped]
+  if side=='asks':
+    return np.amax(rates)
+  if side=='bids':
+    return np.amin(rates)
 
 # Returns the balance in each currency, in JSON format
 #{u'available': u'0.00000000', u'onOrders': u'0.00000000', u'btcValue': u'0.00000000'}
-def polo_balance(coin):
+def get_balance(coin):
   order = {
     'command': 'returnCompleteBalances',
-    'nonce': nonce(),
+    'nonce': util.nonce(),
     'account': 'all'
   }
   r = requests.post(endpoint_url, data=order, auth=auth).json()
@@ -92,17 +97,42 @@ def polo_balance(coin):
 
 # Buy/sell, with product_id being the currency pair. Returns response in JSON format.
 # {"orderNumber":31226040,"resultingTrades":[{"amount":"338.8732","date":"2014-10-18 23:03:21","rate":"0.00000173","total":"0.00058625","tradeID":"16164","type":"buy"}]}
-def order(currencyPair, rate, amount, side):
+def place_order(currencyPair, rate, amount, side):
   if side not in ['buy', 'sell']:
     raise Exception("Invalid side for transaction.")
   order = {
     'command': side,
-    'nonce': nonce(),
+    'nonce': util.nonce(),
     'currencyPair': currencyPair,
     'rate': rate,
-    'amount': amount
+    'amount': amount,
+    'immediateOrCancel': 1
   }
   r = requests.post(endpoint_url, data=order, auth=auth)
   if 'error' in r:
     raise Exception("Request Error: " + r['error'])
   return r
+
+# Margin uy/sell, with product_id being the currency pair. Returns response in JSON format.
+# {"orderNumber":31226040,"resultingTrades":[{"amount":"338.8732","date":"2014-10-18 23:03:21","rate":"0.00000173","total":"0.00058625","tradeID":"16164","type":"buy"}]}
+def place_margin_order(currencyPair, rate, amount, side):
+  if side not in ['buy', 'sell']:
+    raise Exception("Invalid side for transaction.")
+  command = 'marginBuy'
+  if side == 'sell':
+    command = 'marginSell'
+  order = {
+    'command': command,
+    'nonce': util.nonce(),
+    'currencyPair': currencyPair,
+    'rate': rate,
+    'amount': amount,
+    'immediateOrCancel': 1
+  }
+  r = requests.post(endpoint_url, data=order, auth=auth)
+  if 'error' in r:
+    raise Exception("Request Error: " + r['error'])
+  return r
+
+print get_rate('BTC_LTC', 'asks')
+print get_rate('BTC_LTC', 'bids')
