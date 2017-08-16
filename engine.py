@@ -1,8 +1,12 @@
+from gdax import get_accounts, size_buy, funds_buy, size_sell, funds_sell, get_products, get_book
+from polo import polo_quote, polo_balance, polo_size_buy, polo_size_sell
+from bitfinex import buy, sell, get_orders, get_rate
+
 EXCHANGES = {'bitfinex', 'poloniex', 'gdax'}
 
 FEES = {
   'bitfinex': 0.025,
-  'poloniex': 0.025
+  'poloniex': 0.025,
   'gdax': 0.025
 }
 
@@ -14,29 +18,44 @@ PRODUCTS = {
 # Buy long from an exchange. size is the amount of currency, exchanges are listed above
 # and product is the currency pair being traded.
 def buy_long(size, exchange, product):
+  return {'gdax': size_buy(),
+   'polo': polo_size_buy(),
+   'bitfinex': buy()}[exchange]()
   # stubbity stub
   return
 
 # Buy short from an exchange. size is the amount of currency, exchanges are listed above
 # and product is the currency pair being traded.
 def buy_short(size, exchange, product):
+  return {'gdax': buy_short(),
+   'polo': polo_size_buy_short(),
+   'bitfinex': buy_short()}[exchange]()
   # stubbity stub
   return
 
 # Sell long from an exchange. size is the amount of currency, exchanges are listed above
 # and product is the currency pair being traded.
 def sell_long(size, exchange, product):
+  return {'gdax': size_sell(),
+   'polo': polo_size_sell(),
+   'bitfinex': sell()}[exchange]()
   # stubbity stub
   return
 
 # Sell short from an exchange. size is the amount of currency, exchanges are listed above
 # and product is the currency pair being traded.
-def buy_long(size, exchange, product):
+def sell_short(size, exchange, product):
+  return {'gdax': sell_short(),
+   'polo': polo_size_sell_short(),
+   'bitfinex': sell_short()}[exchange]()
   # stubbity stub
   return
 
 # Get the rates for a product in a given exchange.
 def get_rate(exchange, product):
+  # return {'gdax': (),
+  #  'polo': (),
+  #  'bitfinex': ()}[exchange]()
   # stubbity stub
   return
 
