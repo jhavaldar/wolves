@@ -1,4 +1,32 @@
+<<<<<<< HEAD
 # Rate Limits: <60 requests per minute
+=======
+# Taker Fees
+# $0.00 or more traded  0.20%
+# $500,000.00 or more traded  0.20%
+# $1,000,000.00 or more traded  0.20%
+# $2,500,000.00 or more traded  0.20%
+# $5,000,000.00 or more traded  0.20%
+# $7,500,000.00 or more traded  0.20%
+# $10,000,000.00 or more traded 0.18%
+# $15,000,000.00 or more traded 0.16%
+# $20,000,000.00 or more traded 0.14%
+# $25,000,000.00 or more traded 0.12%
+# $30,000,000.00 or more traded 0.10%
+  
+# Maker Fees
+# $0.00 or more traded  0.10%
+# $500,000.00 or more traded  0.08%
+# $1,000,000.00 or more traded  0.06%
+# $2,500,000.00 or more traded  0.04%
+# $5,000,000.00 or more traded  0.02%
+# $7,500,000.00 or more traded  0.00%
+# $10,000,000.00 or more traded 0.00%
+# $15,000,000.00 or more traded 0.00%
+# $20,000,000.00 or more traded 0.00%
+# $25,000,000.00 or more traded 0.00%
+# $30,000,000.00 or more traded 0.00%
+>>>>>>> c5c6a68b4f976f5517973f850e04c513db89a301
 
 
 import requests
