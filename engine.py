@@ -2,6 +2,8 @@ from gdax import get_accounts, size_buy, funds_buy, size_sell, funds_sell, get_p
 from polo import polo_quote, polo_balance, polo_size_buy, polo_size_sell
 from bitfinex import buy, sell, get_orders, get_rate
 
+import copy
+
 EXCHANGES = {'bitfinex', 'poloniex', 'gdax'}
 
 FEES = {
@@ -11,8 +13,13 @@ FEES = {
 }
 
 PRODUCTS = {
-  'BTC-LTC',
-  'BTC-ETC'
+  'LTC-BTC',
+  'ETH-BTC',
+  'ETH-BTC',
+  'ETH-BTC',
+  'ETH-BTC',
+
+
 }
 
 # Buy long from an exchange. size is the amount of currency, exchanges are listed above
@@ -63,9 +70,67 @@ def get_rate(exchange, product):
 
 # Write a function to check for arbitrage.
 # Return the two exchanges, in order of lowest to highest rate, and the currency pair we will trade.
+
+# Bitcoin
+# COINS ON POLO AND BITFINNEX
+# Dash
+# Ethereum
+# Litecoin
+# Ripple
+# Bitcoin Cash
+# Monero
+# Ethereum Classic
+# Zcash
+
+#COINS on GDAX
+# Ethereum
+# Litecoin
+
+# LIST OF EXCHANGES
+exchange_list = ['gdax', 'polo', 'bitfinex']
+alt_exchange_list=['polo', 'bitfinex']
+
+# LIST OF COINS
+basic_coins = []
+alt_coins = []
+
+
 def check_for_arbitrage():
+  #for each coin, compare each exchange
+  basic_opps=compare_exchanges(exchange_list, basic_coins)
+  alt_opps=compare_exchanges(alt_exchange_list, alt_coins)
+  return basic_opps if basic_opps['diff'] > alt_opps['diff'] else alt_opps
+  
+  #output a coin, and exchanges in a dictionary with coin: , low: , high: , diff:
+
+def compare_exchanges(exchanges, coins):
+  #GIVEN list of exhcnages, and relevant coins to each ones in array format
+  #Return best
+  opps={}
+  compare={'coin': x};
+  for x in coins:  
+    compare={exchange:get_rate(exchanges,coin) for exchange in exchanges}
+    comparison = compare_rates(compare)
+    if comparison['diff'] > opps['diff']:
+      opps = copy.deepcopy(comparison)
+
+
+  #OLD CODE
+  # for x in coins:
+  #   compare={'coin': x};
+  #   for y in exchanges:
+  #     compare[y] = get_rate(y, x)
+  #   comparison = compare_rates(compare)
+  #   if comparison['diff'] > opps['diff']:
+  #     opps = copy.deepcopy(comparison)
+  return opps
+
+def compare_rates(rates_dict):
+  #GIVEN dictionary with 'coin' and exchanges associated with their rates of that coin
+  #Return highest arbitrage opportunity between the exchanges as a 'coin', 'exchange_low', 'exchange_high', 'diff'
   # Stubbity stub
-  return
+
+
 
 # Write a function to check if we can actually make a profit trading at a given size. (return true or false)
 # Maybe later on, we can check what size and final_spread we need to be at to make a profit.
