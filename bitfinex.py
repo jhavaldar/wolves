@@ -1,6 +1,4 @@
-<<<<<<< HEAD
 # Rate Limits: <60 requests per minute
-=======
 # Taker Fees
 # $0.00 or more traded  0.20%
 # $500,000.00 or more traded  0.20%
@@ -26,8 +24,6 @@
 # $20,000,000.00 or more traded 0.00%
 # $25,000,000.00 or more traded 0.00%
 # $30,000,000.00 or more traded 0.00%
->>>>>>> c5c6a68b4f976f5517973f850e04c513db89a301
-
 
 import requests
 import json, hmac, hashlib, time, requests, base64
@@ -110,9 +106,9 @@ def get_rate(symbol, side):
   zipped = zip(prices, amounts)
   rates = [d[0]/d[1] for d in zipped]
   if side=='asks':
-    return np.amax(a)
+    return np.amax(rates)
   if side=='bids':
-    return np.amin(a)
+    return np.amin(rates)
 
 # Get the API Key and the API Secret
 def get_auth():
@@ -120,6 +116,8 @@ def get_auth():
     arr = file.read().split("\n")
     return arr[0], arr[1]
 
-#key, secret = get_auth()
+API_KEY, API_SECRET = get_auth()
+
+print sell(1.0, 100, "ltcusd")
 
 

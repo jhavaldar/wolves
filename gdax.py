@@ -13,13 +13,9 @@ from requests.auth import AuthBase
 # Create custom authentication for Exchange
 class CoinbaseExchangeAuth(AuthBase):
     def __init__(self, api_key, secret_key, passphrase):
-        # self.api_key = api_key
-        # self.secret_key = secret_key
-        # self.passphrase = passphrase
-
-        self.api_key = '1454684d26a1ac242366170f566f4288'
-        self.secret_key = 'Oetkm1ArY/BZCVdOP9JuWW5rkynqMLRG3tvQPPJpCM6GWR8PCElqXTZmdzuKFF7xdwTYDB8vEgBeg04qCGqHjw=='
-        self.passphrase = '7yrrrfcur1x'
+        self.api_key = api_key
+        self.secret_key = secret_key
+        self.passphrase = passphrase
 
     def __call__(self, request):
         timestamp = str(time.time())
@@ -40,13 +36,20 @@ class CoinbaseExchangeAuth(AuthBase):
 api_url = "https://api.gdax.com"
 # api_url = "https://api-public.sandbox.gdax.com"
 
+api_file = "api_gdax.txt"
+
 # Authenticate for exchanges
-def get_auth(API_KEY, API_SECRET, API_PASS):
-  auth = CoinbaseExchangeAuth(API_KEY, API_SECRET, API_PASS)
+def get_auth(api_file):
+  with open(api_file, 'r') as file:
+    arr = file.read().split("\n")
+    API_KEY = arr[0]
+    API_SECRET = arr[1]
+    API_PASS = arr[2]
+    auth = CoinbaseExchangeAuth(API_KEY, API_SECRET, API_PASS)
   return auth
 
 #auth = None
-auth = CoinbaseExchangeAuth('1454684d26a1ac242366170f566f4288', 'Oetkm1ArY/BZCVdOP9JuWW5rkynqMLRG3tvQPPJpCM6GWR8PCElqXTZmdzuKFF7xdwTYDB8vEgBeg04qCGqHjw==', '7yrrrfcur1x')
+auth = get_auth(api_file)
 
 # Return accounts information in JSON format
 def get_accounts():
@@ -65,6 +68,7 @@ def size_buy(size, product_id):
   r = requests.post(api_url + '/orders', json=order, auth=auth)
   return r.json()
 
+# print size_buy(1.0, 'LTC-USD')
 
 # Return order ID in JSON format.
 def funds_buy(funds, product_id):
@@ -88,6 +92,8 @@ def size_sell(size, product_id):
   r = requests.post(api_url + '/orders', json=order, auth=auth)
   return r.json()
 
+# print size_sell(1.0, 'LTC-USD')
+
 # Return order ID in JSON format. You can specify buying by size or by quote currency.
 def funds_sell(funds, product_id):
   order = {
@@ -104,11 +110,11 @@ def get_products():
   r = requests.get(api_url + '/products')
   return r.json()
 
-print get_products()
+# print get_products()
 
 # Get a list of the best bid and ask orders for a certain product
 def get_book(product_id):
   r = requests.get(api_url + '/products/' + product_id + "/book")
   return r.json()
 
-# print repr(get_products())
+# print get_book('LTC-USD')
